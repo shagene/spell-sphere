@@ -11,6 +11,7 @@
   "dependencies": {
     "@nextui-org/react": "^2.4.6",
     "elevenlabs": "^0.15.0",
+    "elevenlabs-node": "^2.0.3",
     "next": "14.2.7",
     "next-themes": "^0.3.0",
     "react": "^18",

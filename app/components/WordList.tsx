@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, Button, Input, CardBody } from "@nextui-org/react";
 import { ImageUpload } from './ImageUpload';
 import { DocumentUpload } from './DocumentUpload';
@@ -11,26 +11,22 @@ interface Word {
 }
 
 interface WordListProps {
-  onWordsUpdated: (newWords: string[]) => void;
+  onWordsUpdated: (words: string[]) => void;
 }
 
-export function WordList({ onWordsUpdated }: WordListProps) {
-  const [words, setWords] = useState<Word[]>([]);
+export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
+  const [words, setWords] = useState<string[]>([]);
   const [newWord, setNewWord] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
 
-  useEffect(() => {
-    const storedWords = localStorage.getItem('spellingWords');
-    if (storedWords) {
-      setWords(JSON.parse(storedWords));
-    }
-  }, []);
+  const updateParentWords = useCallback(() => {
+    onWordsUpdated(words);
+  }, [words, onWordsUpdated]);
 
   useEffect(() => {
-    localStorage.setItem('spellingWords', JSON.stringify(words));
-    onWordsUpdated(words.map(word => word.text));
-  }, [words, onWordsUpdated]);
+    updateParentWords();
+  }, [updateParentWords]);
 
   const addWord = () => {
     if (newWord.trim()) {
@@ -113,4 +109,4 @@ export function WordList({ onWordsUpdated }: WordListProps) {
       </CardBody>
     </Card>
   );
-}
+};

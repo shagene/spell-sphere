@@ -5,6 +5,7 @@ import { WordList } from './components/WordList';
 import { QuizMode } from './components/QuizMode';
 import { Button, Card, CardBody } from "@nextui-org/react";
 import { Layout } from './components/Layout';
+import TextToSpeech from '../components/TextToSpeech';
 
 export default function Home() {
   const [words, setWords] = useState<string[]>([]);
@@ -69,6 +70,7 @@ export default function Home() {
           )}
         </div>
       </div>
+      <TextToSpeech />
     </main>
   );
 }
