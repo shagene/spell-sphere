@@ -6,7 +6,12 @@ import { Button, Input, Card, CardBody } from "@nextui-org/react";
 interface QuizModeProps {
   words: string[];
   onQuizComplete: (score: number) => void;
-  onBackToDashboard: () => void;  // New prop for navigation
+  onBackToDashboard: () => void;
+}
+
+interface Voice {
+  voice_id: string;
+  name: string;
 }
 
 export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeProps) {
@@ -15,28 +20,60 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   const [score, setScore] = useState(0);
   const [submitted, setSubmitted] = useState<boolean[]>(new Array(words.length).fill(false));
   const [isReviewMode, setIsReviewMode] = useState(false);
-  const [isListening, setIsListening] = useState(false);
+  const [voices, setVoices] = useState<Voice[]>([]);
+  const [selectedVoice, setSelectedVoice] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const recognitionRef = useRef<any>(null);
 
-  const speakWord = (word: string) => {
-    const utterance = new SpeechSynthesisUtterance(word);
-    utterance.rate = 0.8; // Slightly slower
-    utterance.pitch = 1.0; // Normal pitch
-    
-    // Try to select a more natural-sounding voice
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(
-      voice => voice.name.includes('Natural') || 
-               voice.name.includes('Neural') || 
-               voice.name.includes('Wavenet') ||
-               (voice.name === "Google US English" || voice.lang === 'en-US')
-    );
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+  useEffect(() => {
+    const fetchVoices = async () => {
+      try {
+        const response = await fetch('/api/tts');
+        if (!response.ok) {
+          throw new Error('Failed to fetch voices');
+        }
+        const data = await response.json();
+        const voicesArray = Array.isArray(data) ? data : data.voices;
+        if (Array.isArray(voicesArray)) {
+          setVoices(voicesArray);
+          if (voicesArray.length > 0) {
+            setSelectedVoice(voicesArray[0].voice_id);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching voices:', error);
+      }
+    };
+    fetchVoices();
+  }, []);
+
+  const speakWord = async (word: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ text: word, voiceId: selectedVoice }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate speech');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      
+      if (audioRef.current) {
+        audioRef.current.src = audioUrl;
+        audioRef.current.play();
+      }
+    } catch (error) {
+      console.error('Error generating speech:', error);
+    } finally {
+      setIsLoading(false);
     }
-
-    window.speechSynthesis.speak(utterance);
   };
 
   const handleInputChange = (index: number, value: string) => {
@@ -60,57 +97,39 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     }
   };
 
-  useEffect(() => {
-    if ('SpeechRecognition' in window || 'webkitSpeechRecognition' in window) {
-      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      recognitionRef.current = new SpeechRecognition();
-      recognitionRef.current.continuous = false;
-      recognitionRef.current.interimResults = false;
-
-      recognitionRef.current.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
-        handleInputChange(currentWordIndex, transcript);
-        setIsListening(false);
-      };
-
-      recognitionRef.current.onerror = (event: any) => {
-        console.error('Speech recognition error', event.error);
-        setIsListening(false);
-      };
-    }
-  }, []);
-
-  const toggleListening = () => {
-    if (isListening) {
-      recognitionRef.current?.stop();
-    } else {
-      recognitionRef.current?.start();
-    }
-    setIsListening(!isListening);
-  };
-
   const renderQuizMode = () => (
     <>
       <h2 className="text-2xl font-bold mb-4">Spelling Quiz</h2>
       <div className="mb-4">
         <p>Word {currentWordIndex + 1} of {words.length}</p>
-        <Button onClick={() => speakWord(words[currentWordIndex])} className="mt-2">
-          Hear Word
+        <Button 
+          onClick={() => speakWord(words[currentWordIndex])} 
+          className="mt-2"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Loading...' : 'Hear Word'}
         </Button>
       </div>
-      <div className="flex items-center mb-4">
+      {voices.length > 0 && (
+        <select
+          value={selectedVoice}
+          onChange={(e) => setSelectedVoice(e.target.value)}
+          className="mb-4"
+        >
+          {voices.map((voice) => (
+            <option key={voice.voice_id} value={voice.voice_id}>
+              {voice.name}
+            </option>
+          ))}
+        </select>
+      )}
+      <div className="mb-4">
         <Input
           value={userInputs[currentWordIndex]}
           onChange={(e) => handleInputChange(currentWordIndex, e.target.value)}
-          placeholder="Type or speak the word you hear"
+          placeholder="Type the word you hear"
           className="mr-2"
         />
-        <Button
-          onClick={toggleListening}
-          color={isListening ? "danger" : "success"}
-        >
-          {isListening ? "Stop" : "Speak"}
-        </Button>
       </div>
       <Button
         onClick={() => handleSubmit(currentWordIndex)}

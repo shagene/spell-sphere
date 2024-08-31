@@ -70,7 +70,7 @@ export default function Home() {
           )}
         </div>
       </div>
-      <TextToSpeech />
+      {/* <TextToSpeech /> */}
     </main>
   );
 }
