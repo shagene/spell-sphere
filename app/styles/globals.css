@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg-primary: #ffffff;
+  --text-primary: #333333;
+  --accent-color: #4a90e2;
+}
+
+[data-theme='dark'] {
+  --bg-primary: #333333;
+  --text-primary: #ffffff;
+  --accent-color: #64b5f6;
+}
+
+[data-theme='nature'] {
+  --bg-primary: #f1f8e9;
+  --text-primary: #33691e;
+  --accent-color: #7cb342;
+}
+
+[data-theme='ocean'] {
+  --bg-primary: #e3f2fd;
+  --text-primary: #0d47a1;
+  --accent-color: #1e88e5;
+}
+
+[data-theme='sunset'] {
+  --bg-primary: #fff3e0;
+  --text-primary: #e65100;
+  --accent-color: #ff9800;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+a {
+  color: var(--accent-color);
+}
+
+button {
+  background-color: var(--accent-color);
+  color: var(--bg-primary);
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary);
+}
+
+.card {
+  background-color: var(--bg-primary);
+  border: 1px solid var(--accent-color);
+}
+
+/* Add more global styles using theme variables */

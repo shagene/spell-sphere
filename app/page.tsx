@@ -3,9 +3,9 @@
 import React, { useState } from 'react';
 import { WordList } from './components/WordList';
 import { QuizMode } from './components/QuizMode';
-import { Button, Card, CardBody } from "@nextui-org/react";
+import { Button, Card, CardBody, CardHeader } from "@nextui-org/react";
 import { Layout } from './components/Layout';
-import TextToSpeech from '../components/TextToSpeech';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
 
 export default function Home() {
   const [words, setWords] = useState<string[]>([]);
@@ -27,12 +27,14 @@ export default function Home() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-4xl font-bold mb-8">Welcome to SpellSphere</h1>
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold mb-8 text-center">Spelling Practice App</h1>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="col-span-1 md:col-span-2">
+    <Layout>
+      <main className="flex min-h-screen flex-col items-center justify-between p-24">
+        <h1 className="text-4xl font-bold mb-8">Welcome to SpellSphere</h1>
+        <div className="max-w-4xl mx-auto w-full">
+          <Card className="w-full">
+            <CardHeader className="flex justify-end items-center px-4 py-2">
+              <ThemeSwitcher />
+            </CardHeader>
             <CardBody>
               {isQuizMode ? (
                 <QuizMode 
@@ -56,7 +58,7 @@ export default function Home() {
             </CardBody>
           </Card>
           {quizScore !== null && (
-            <Card className="col-span-1 md:col-span-2">
+            <Card className="mt-8">
               <CardBody>
                 <h2 className="text-2xl font-bold mb-2">Quiz Results</h2>
                 <p>Your score: {quizScore}/{words.length}</p>
@@ -69,8 +71,7 @@ export default function Home() {
             </Card>
           )}
         </div>
-      </div>
-      {/* <TextToSpeech /> */}
-    </main>
+      </main>
+    </Layout>
   );
 }
