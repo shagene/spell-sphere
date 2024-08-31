@@ -1,50 +1,55 @@
 import { NextResponse } from 'next/server';
-import { Voice, generateStream, getVoices, GenerateStreamOptions } from 'elevenlabs-node';
+import { ElevenLabsClient } from 'elevenlabs';
+
+const elevenlabs = new ElevenLabsClient({
+  apiKey: process.env.ELEVENLABS_API_KEY,
+});
 
 export async function POST(request: Request) {
+  console.log('Received POST request to /api/tts');
   try {
     const { text, voiceId } = await request.json();
+    console.log('Request body:', { text, voiceId });
 
-    const options: GenerateStreamOptions = {
-      text,
-      voice_id: voiceId,
-      api_key: process.env.ELEVENLABS_API_KEY!,
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('ELEVENLABS_API_KEY is not set');
+      throw new Error('ELEVENLABS_API_KEY is not set');
+    }
+
+    console.log('Generating audio stream');
+    const audio = await elevenlabs.generate({
+      voice: voiceId,
+      text: text,
       model_id: 'eleven_multilingual_v2',
-    };
-
-    const audioStream = await generateStream(options);
-
-    // Create a ReadableStream from the audioStream
-    const readableStream = new ReadableStream({
-      start(controller) {
-        audioStream.on('data', (chunk: any) => controller.enqueue(chunk));
-        audioStream.on('end', () => controller.close());
-        audioStream.on('error', (err: any) => controller.error(err));
-      },
     });
+    console.log('Audio generated successfully');
 
-    // Return the stream as the response
-    return new NextResponse(readableStream, {
+    return new NextResponse(audio, {
       headers: {
         'Content-Type': 'audio/mpeg',
-        'Transfer-Encoding': 'chunked',
       },
     });
   } catch (error) {
     console.error('Error generating speech:', error);
-    return NextResponse.json({ error: 'Error generating speech', details: error.message }, { status: 500 });
+    console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    return NextResponse.json({ error: 'Error generating speech', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
 
 export async function GET() {
+  console.log('Received GET request to /api/tts');
   try {
     if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('ELEVENLABS_API_KEY is not set');
       throw new Error('ELEVENLABS_API_KEY is not set');
     }
-    const voices = await getVoices(process.env.ELEVENLABS_API_KEY);
+    console.log('Fetching voices from ElevenLabs API');
+    const voices = await elevenlabs.voices.getAll();
+    console.log('Fetched voices structure:', JSON.stringify(voices, null, 2));
     return NextResponse.json(voices);
   } catch (error) {
     console.error('Error fetching voices:', error);
-    return NextResponse.json({ error: 'Error fetching voices', details: error.message }, { status: 500 });
+    console.error('Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+    return NextResponse.json({ error: 'Error fetching voices', details: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 });
   }
 }
