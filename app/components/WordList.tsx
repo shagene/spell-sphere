@@ -15,13 +15,13 @@ interface WordListProps {
 }
 
 export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
-  const [words, setWords] = useState<string[]>([]);
+  const [words, setWords] = useState<Word[]>([]); // Change this line
   const [newWord, setNewWord] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
 
   const updateParentWords = useCallback(() => {
-    onWordsUpdated(words);
+    onWordsUpdated(words.map(word => word.text));
   }, [words, onWordsUpdated]);
 
   useEffect(() => {
