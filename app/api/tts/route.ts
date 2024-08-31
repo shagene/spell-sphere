@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ElevenLabsClient } from 'elevenlabs';
+import { Readable } from 'stream';
 
 const elevenlabs = new ElevenLabsClient({
   apiKey: process.env.ELEVENLABS_API_KEY,
@@ -17,14 +18,21 @@ export async function POST(request: Request) {
     }
 
     console.log('Generating audio stream');
-    const audio = await elevenlabs.generate({
+    const audioStream = await elevenlabs.generate({
       voice: voiceId,
       text: text,
       model_id: 'eleven_multilingual_v2',
     });
     console.log('Audio generated successfully');
 
-    return new NextResponse(audio, {
+    // Convert the Readable stream to a Uint8Array
+    const chunks: Uint8Array[] = [];
+    for await (const chunk of audioStream) {
+      chunks.push(chunk);
+    }
+    const audioBuffer = Buffer.concat(chunks);
+
+    return new NextResponse(audioBuffer, {
       headers: {
         'Content-Type': 'audio/mpeg',
       },
