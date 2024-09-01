@@ -10,15 +10,22 @@ export const metadata: Metadata = {
   description: 'Your magical AI assistant',
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body>
-        <Providers>{children}</Providers>
+      <body className={`${inter.className} bg-bg-primary text-text-primary min-h-screen flex flex-col`}>
+        <Providers>
+          <main className="flex-grow p-4">
+            {children}
+          </main>
+          <footer className="bg-accent-color text-bg-primary p-4 mt-8">
+            <div className="container mx-auto">
+              <p>&copy; 2023 SpellSphere. All rights reserved.</p>
+              <p>Empowering language learning through technology</p>
+              <p>Contact: support@spellsphere.com</p>
+            </div>
+          </footer>
+        </Providers>
       </body>
     </html>
   );
