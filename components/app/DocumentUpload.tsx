@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Button, Input } from "@nextui-org/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 interface DocumentUploadProps {
   onWordsExtracted: (words: string[]) => void;
@@ -40,9 +41,9 @@ export function DocumentUpload({ onWordsExtracted }: DocumentUploadProps) {
   };
 
   return (
-    <div className="mb-4">
+    <div className="space-y-4">
       <Input type="file" onChange={handleFileChange} accept=".txt,.doc,.docx,.pdf" />
-      <Button onClick={handleUpload} disabled={!file} className="mt-2">
+      <Button onClick={handleUpload} disabled={!file}>
         Upload Document
       </Button>
     </div>

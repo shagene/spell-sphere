@@ -1,5 +1,8 @@
+'use client';
+
 import React, { useState } from 'react';
-import { Button, Input } from "@nextui-org/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Tesseract from 'tesseract.js';
 
 interface ImageUploadProps {
@@ -28,7 +31,7 @@ export function ImageUpload({ onWordsExtracted }: ImageUploadProps) {
   };
 
   return (
-    <div>
+    <div className="space-y-4">
       <Input type="file" onChange={handleImageUpload} accept="image/*" />
       {isLoading && <p>Processing image...</p>}
     </div>

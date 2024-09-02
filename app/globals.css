@@ -3,4 +3,40 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-primary: #ffffff;
+  --text-primary: #000000;
+  --accent-color: #3498db;
+}
+
+[data-theme="ocean"] {
+  --bg-primary: #e0f7fa;
+  --text-primary: #01579b;
+  --accent-color: #00bcd4;
+}
+
+[data-theme="nature"] {
+  --bg-primary: #f1f8e9;
+  --text-primary: #33691e;
+  --accent-color: #8bc34a;
+}
+
+[data-theme="sunset"] {
+  --bg-primary: #fff3e0;
+  --text-primary: #e65100;
+  --accent-color: #ff9800;
+}
+
+.dark {
+  --bg-primary: #121212;
+  --text-primary: #ffffff;
+  --accent-color: #bb86fc;
+}
+
 /* ... rest of your global styles ... */
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+  }
+}

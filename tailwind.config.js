@@ -5,18 +5,20 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: ['class', 'class'],
   theme: {
-    extend: {
-      backgroundColor: {
-        'bg-primary': 'var(--bg-primary)',
-        'accent-color': 'var(--accent-color)',
-      },
-      textColor: {
-        'text-primary': 'var(--text-primary)',
-        'bg-primary': 'var(--bg-primary)',
-      },
-    },
+  	extend: {
+  		colors: {
+  			'bg-primary': 'var(--bg-primary)',
+  			'text-primary': 'var(--text-primary)',
+  			'accent-color': 'var(--accent-color)'
+  		},
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
+  		}
+  	}
   },
-  darkMode: 'class',
-  plugins: [],
+  plugins: [require("tailwindcss-animate")],
 }
