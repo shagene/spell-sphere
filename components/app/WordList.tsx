@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { v4 as uuidv4 } from 'uuid';
+import { Card, CardContent } from "@/components/ui/card";
 
 interface Word {
   id: string;
@@ -76,53 +77,55 @@ export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
   };
 
   return (
-    <div className="bg-bg-primary text-text-primary p-4 rounded-lg shadow-md">
-      <h2 className="text-2xl font-bold mb-4">Word List</h2>
-      <div className="flex mb-4">
-        <Input
-          value={newWord}
-          onChange={(e) => setNewWord(e.target.value)}
-          placeholder="Enter a new word"
-          className="flex-grow mr-2"
-        />
-        <Button onClick={addWord}>Add Word</Button>
-      </div>
-      <ul className="list-disc pl-6">
-        {words.map(word => (
-          <li key={word.id} className="mb-2 flex justify-between items-center">
-            {editingId === word.id ? (
-              <>
-                <Input
-                  value={editingText}
-                  onChange={(e) => setEditingText(e.target.value)}
-                  className="mr-2"
-                />
-                <Button onClick={saveEdit} variant="outline">Save</Button>
-              </>
-            ) : (
-              <>
-                <span>{word.text}</span>
-                <div className="flex items-center">
-                  <label className="mr-2">
-                    <input
-                      type="checkbox"
-                      checked={word.helpEnabled}
-                      onChange={() => toggleHelp(word.id)}
-                      className="mr-1"
-                    />
-                    Help
-                  </label>
-                  <Button onClick={() => startEditing(word)} variant="outline" className="mr-2">Edit</Button>
-                  <Button onClick={() => deleteWord(word.id)} variant="destructive">Delete</Button>
-                </div>
-              </>
-            )}
-          </li>
-        ))}
-      </ul>
-      {words.length > 0 && (
-        <Button onClick={clearAllWords} variant="destructive" className="mt-4">Clear All Words</Button>
-      )}
-    </div>
+    <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+      <CardContent>
+        <h2 className="text-2xl font-bold mb-4">Word List</h2>
+        <div className="flex mb-4">
+          <Input
+            value={newWord}
+            onChange={(e) => setNewWord(e.target.value)}
+            placeholder="Enter a new word"
+            className="flex-grow mr-2"
+          />
+          <Button onClick={addWord} variant="default">Add Word</Button>
+        </div>
+        <ul className="space-y-2">
+          {words.map(word => (
+            <li key={word.id} className="flex justify-between items-center p-2 border rounded">
+              {editingId === word.id ? (
+                <>
+                  <Input
+                    value={editingText}
+                    onChange={(e) => setEditingText(e.target.value)}
+                    className="mr-2"
+                  />
+                  <Button onClick={saveEdit} variant="secondary">Save</Button>
+                </>
+              ) : (
+                <>
+                  <span>{word.text}</span>
+                  <div className="flex items-center space-x-2">
+                    <label className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={word.helpEnabled}
+                        onChange={() => toggleHelp(word.id)}
+                        className="mr-1"
+                      />
+                      <span>Help</span>
+                    </label>
+                    <Button onClick={() => startEditing(word)} variant="outline" size="sm">Edit</Button>
+                    <Button onClick={() => deleteWord(word.id)} variant="destructive" size="sm">Delete</Button>
+                  </div>
+                </>
+              )}
+            </li>
+          ))}
+        </ul>
+        {words.length > 0 && (
+          <Button onClick={clearAllWords} variant="destructive" className="mt-4">Clear All Words</Button>
+        )}
+      </CardContent>
+    </Card>
   );
 };

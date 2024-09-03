@@ -1,42 +1,63 @@
-@import './styles/themes.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --bg-primary: #ffffff;
-  --text-primary: #000000;
-  --accent-color: #3498db;
-}
-
-[data-theme="ocean"] {
-  --bg-primary: #e0f7fa;
-  --text-primary: #01579b;
-  --accent-color: #00bcd4;
-}
-
-[data-theme="nature"] {
-  --bg-primary: #f1f8e9;
-  --text-primary: #33691e;
-  --accent-color: #8bc34a;
-}
-
-[data-theme="sunset"] {
-  --bg-primary: #fff3e0;
-  --text-primary: #e65100;
-  --accent-color: #ff9800;
-}
-
-.dark {
-  --bg-primary: #121212;
-  --text-primary: #ffffff;
-  --accent-color: #bb86fc;
-}
-
-/* ... rest of your global styles ... */
-
 @layer base {
   :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
+    --primary: 0 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 48 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 0%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 100% 40%;
     --radius: 0.5rem;
   }
+
+  .dark {
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 0 100% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 48 100% 50%;
+    --secondary-foreground: 0 0% 0%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 0 0% 20%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62% 30%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 0 100% 40%;
+  }
 }
+
+body {
+  @apply bg-background text-foreground;
+  transition: color 0.3s ease, background-color 0.3s ease;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+

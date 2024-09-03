@@ -150,7 +150,8 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
 
   useEffect(() => {
     if (words.length > 0 && currentWordIndex < words.length && words[currentWordIndex] && words[currentWordIndex].helpEnabled) {
-      setShuffledLetters(shuffleWord(words[currentWordIndex].text).filter(letter => !usedLetters.includes(letter)));
+      const wordLetters = words[currentWordIndex].text.split('').map(char => ({ id: uuidv4(), char }));
+      setShuffledLetters(wordLetters.sort(() => Math.random() - 0.5));
       setUsedLetters([]);
     } else {
       setShuffledLetters([]);
@@ -177,7 +178,12 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   };
 
   const handleShuffleLetters = () => {
-    setShuffledLetters(shuffleWord(words[currentWordIndex].text).filter(letter => !usedLetters.includes(letter)));
+    setShuffledLetters(prevShuffledLetters => {
+      const allLetters = [...prevShuffledLetters, ...usedLetters];
+      return allLetters
+        .sort(() => Math.random() - 0.5)
+        .filter(letter => !usedLetters.some(usedLetter => usedLetter.id === letter.id));
+    });
   };
 
   const renderQuizMode = () => (
@@ -205,10 +211,8 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
                   <Button
                     key={voice.voice_id}
                     onClick={() => handleVoiceSelect(voice.voice_id)}
-                    className={cn(
-                      "w-full justify-start font-normal",
-                      selectedVoice === voice.voice_id ? "bg-accent text-accent-foreground" : ""
-                    )}
+                    variant={selectedVoice === voice.voice_id ? "secondary" : "ghost"}
+                    className="w-full justify-start font-normal"
                   >
                     <Check
                       className={cn(
@@ -230,6 +234,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
           onClick={() => words.length > 0 && speakWord(words[currentWordIndex].text)} 
           className="mt-2"
           disabled={isLoading || words.length === 0}
+          variant="secondary"
         >
           {isLoading ? 'Loading...' : 'Hear Word'}
         </Button>
@@ -246,7 +251,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
               >
                 {letter.char}
                 <X
-                  className="absolute top-0 right-0 h-3 w-3 text-red-500 cursor-pointer"
+                  className="absolute top-0 right-0 h-3 w-3 text-destructive cursor-pointer"
                   onClick={() => handleRemoveLetter(index)}
                 />
               </Button>
@@ -264,7 +269,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
               </Button>
             ))}
           </div>
-          <Button onClick={handleShuffleLetters} variant="outline" size="sm">
+          <Button onClick={handleShuffleLetters} variant="secondary" size="sm">
             <Shuffle className="mr-2 h-4 w-4" />
             Shuffle Letters
           </Button>
@@ -282,6 +287,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
       <Button
         onClick={() => handleSubmit(currentWordIndex)}
         disabled={submitted[currentWordIndex] || words.length === 0}
+        variant="default"
       >
         Submit Answer
       </Button>
@@ -301,7 +307,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         <div key={word.id} className="mb-4 p-2 border rounded">
           <div className="flex justify-between items-center">
             <span className="font-bold">{word.text}</span>
-            <Button size="sm" onClick={() => speakWord(word.text)}>Hear Word</Button>
+            <Button size="sm" variant="secondary" onClick={() => speakWord(word.text)}>Hear Word</Button>
           </div>
           <p className={userInputs[index].toLowerCase().trim() === word.text.toLowerCase().trim() ? "text-green-500" : "text-red-500"}>
             Your answer: {userInputs[index]}
@@ -309,7 +315,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         </div>
       ))}
       <div className="flex justify-end mt-4">
-        <Button onClick={handleFinishQuiz}>
+        <Button onClick={handleFinishQuiz} variant="default">
           Finish Review
         </Button>
       </div>
@@ -317,7 +323,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   );
 
   return (
-    <Card>
+    <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
       <CardContent>
         {words.length === 0 ? (
           <p>No words available for the quiz. Please add some words first.</p>
