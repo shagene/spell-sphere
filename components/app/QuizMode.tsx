@@ -38,10 +38,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [letters, setLetters] = useState<Letter[]>([]);
-  const [draggedLetter, setDraggedLetter] = useState<Letter | null>(null);
-  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
-
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -66,12 +63,22 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
 
   useEffect(() => {
     if (words.length > 0 && currentWordIndex < words.length && words[currentWordIndex] && words[currentWordIndex].helpEnabled) {
-      const wordLetters = words[currentWordIndex].text.split('').map(char => ({ id: uuidv4(), char }));
-      setLetters(wordLetters.sort(() => Math.random() - 0.5));
+      const currentWord = words[currentWordIndex].text;
+      const currentUserInput = userInputs[currentWordIndex];
+
+      if (!currentUserInput || currentUserInput.length !== currentWord.length) {
+        const wordLetters = currentWord.split('').map(char => ({ id: uuidv4(), char }));
+        const shuffledLetters = wordLetters.sort(() => Math.random() - 0.5);
+        setLetters(shuffledLetters);
+        
+        const newUserInputs = [...userInputs];
+        newUserInputs[currentWordIndex] = shuffledLetters.map(letter => letter.char).join('');
+        setUserInputs(newUserInputs);
+      }
     } else {
       setLetters([]);
     }
-  }, [currentWordIndex, words]);
+  }, [currentWordIndex, words, userInputs]);
 
   const speakWord = async (word: string) => {
     if (!selectedVoice) {
@@ -112,12 +119,43 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     setUserInputs(newUserInputs);
   }, [userInputs]);
 
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.dataTransfer.setData('text/plain', index.toString());
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+    e.preventDefault();
+    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    const newLetters = [...letters];
+    const [removed] = newLetters.splice(sourceIndex, 1);
+    newLetters.splice(targetIndex, 0, removed);
+    setLetters(newLetters);
+
+    const newUserInputs = [...userInputs];
+    newUserInputs[currentWordIndex] = newLetters.map(letter => letter.char).join('');
+    setUserInputs(newUserInputs);
+  };
+
+  const handleShuffleLetters = useCallback(() => {
+    setLetters(prevLetters => {
+      const shuffled = [...prevLetters].sort(() => Math.random() - 0.5);
+      const newArrangement = shuffled.map(letter => letter.char).join('');
+      
+      const newUserInputs = [...userInputs];
+      newUserInputs[currentWordIndex] = newArrangement;
+      setUserInputs(newUserInputs);
+      return shuffled;
+    });
+  }, [userInputs, currentWordIndex]);
+
   const handleSubmit = useCallback((index: number) => {
     if (words.length > 0 && index < words.length && words[index]) {
       const word = words[index];
-      const userAnswer = words[index].helpEnabled 
-        ? letters.map(letter => letter.char).join('')
-        : userInputs[index];
+      const userAnswer = userInputs[index];
       if (word && userAnswer.toLowerCase().trim() === word.text.toLowerCase().trim()) {
         setScore(prevScore => prevScore + 1);
       }
@@ -128,58 +166,20 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
       if (newSubmitted.every(Boolean)) {
         setIsReviewMode(true);
       } else {
-        setCurrentWordIndex(prevIndex => {
-          let nextIndex = prevIndex + 1;
-          while (nextIndex < words.length && newSubmitted[nextIndex]) {
-            nextIndex++;
-          }
-          return nextIndex < words.length ? nextIndex : prevIndex;
-        });
+        const nextIndex = newSubmitted.findIndex((isSubmitted, i) => i > index && !isSubmitted);
+        if (nextIndex !== -1) {
+          setCurrentWordIndex(nextIndex);
+        } else {
+          setIsReviewMode(true);
+        }
       }
     }
-  }, [words, letters, userInputs, submitted]);
+  }, [words, userInputs, submitted]);
 
   const handleVoiceSelect = useCallback((voiceId: string) => {
     setSelectedVoice(voiceId);
     setOpen(false);
   }, []);
-
-  const handleDragStart = useCallback((e: React.DragEvent<HTMLButtonElement>, letter: Letter, index: number) => {
-    e.dataTransfer.setData('text', JSON.stringify({ id: letter.id, char: letter.char }));
-    setDraggedLetter(letter);
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLButtonElement>, index: number) => {
-    e.preventDefault();
-    setDropTargetIndex(index);
-  }, []);
-
-  const handleDragEnd = useCallback(() => {
-    setDraggedLetter(null);
-    setDropTargetIndex(null);
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent<HTMLButtonElement>, targetIndex: number) => {
-    e.preventDefault();
-    if (draggedLetter && dropTargetIndex !== null) {
-      const newLetters = [...letters];
-      const draggedIndex = newLetters.findIndex(letter => letter.id === draggedLetter.id);
-      
-      if (draggedIndex !== -1 && draggedIndex !== targetIndex) {
-        const [removed] = newLetters.splice(draggedIndex, 1);
-        newLetters.splice(targetIndex, 0, removed);
-        
-        setLetters(newLetters);
-      }
-    }
-    setDraggedLetter(null);
-    setDropTargetIndex(null);
-  }, [draggedLetter, dropTargetIndex, letters]);
-
-  const handleShuffleLetters = useCallback(() => {
-    setLetters(prevLetters => [...prevLetters].sort(() => Math.random() - 0.5));
-  }, []);
-
   const renderQuizMode = () => (
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -234,39 +234,37 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         </Button>
       </div>
       {words.length > 0 && words[currentWordIndex].helpEnabled ? (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2 mb-2">
-            {letters.map((letter, index) => (
-              <Button
-                key={letter.id}
-                variant="outline"
-                size="lg"
-                className={`relative p-3 text-lg ${dropTargetIndex === index ? 'bg-gray-200' : ''}`}
-                draggable={true}
-                onDragStart={(e) => handleDragStart(e, letter, index)}
-                onDragOver={(e) => handleDragOver(e, index)}
-                onDragEnd={handleDragEnd}
-                onDrop={(e) => handleDrop(e, index)}
-              >
-                {letter.char}
-              </Button>
-            ))}
-          </div>
-          <Button onClick={handleShuffleLetters} variant="secondary" size="lg">
-            <Shuffle className="mr-2 h-5 w-5" />
-            Shuffle Letters
-          </Button>
+  <div className="mb-4">
+    <div className="flex flex-wrap gap-2 mb-2">
+      {letters.map((letter, index) => (
+        <div
+          key={letter.id}
+          draggable
+          onDragStart={(e) => handleDragStart(e, index)}
+          onDragOver={handleDragOver}
+          onDrop={(e) => handleDrop(e, index)}
+          className="relative w-12 h-12 flex items-center justify-center text-lg font-bold border-2 border-gray-300 rounded cursor-move bg-white hover:bg-gray-100 transition-colors"
+        >
+          {letter.char}
         </div>
-      ) : (
-        <div className="mb-4">
-          <Input
-            value={userInputs[currentWordIndex]}
-            onChange={(e) => handleInputChange(currentWordIndex, e.target.value)}
-            placeholder="Type the word you hear"
-            className="mr-2"
-          />
-        </div>
-      )}
+      ))}
+    </div>
+    <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="mt-4">
+      <Shuffle className="mr-2 h-5 w-5" />
+      Shuffle Letters
+    </Button>
+    <p className="mt-2">Current arrangement: {userInputs[currentWordIndex]}</p>
+  </div>
+) : (
+  <div className="mb-4">
+    <Input
+      value={userInputs[currentWordIndex]}
+      onChange={(e) => handleInputChange(currentWordIndex, e.target.value)}
+      placeholder="Type the word you hear"
+      className="mr-2"
+    />
+  </div>
+)}
       <Button
         onClick={() => handleSubmit(currentWordIndex)}
         disabled={submitted[currentWordIndex] || words.length === 0}
@@ -282,7 +280,6 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   const handleFinishQuiz = useCallback(() => {
     onQuizComplete(score, words.length);
   }, [score, words.length, onQuizComplete]);
-
   const renderReviewMode = () => (
     <>
       <h2 className="text-2xl font-bold mb-4">Quiz Review</h2>
