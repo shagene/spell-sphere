@@ -27,10 +27,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </main>
             <footer className="bg-background text-foreground p-4">
-              <div className="container mx-auto text-center">
+              <div className="container mx-auto text-center space-y-2">
                 <p>&copy; 2023 SpellSphere. All rights reserved.</p>
                 <p>Empowering language learning through technology</p>
-                <p>Contact: support@spellsphere.com</p>
+                <p>Created with love for our kids, shared freely with yours.</p>
+                <p>Beta version: We're constantly improving! Feedback welcome.</p>
+                <p>Contact: Visit <a href="https://www.stevenhagene.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.stevenhagene.com</a> and use the contact form there.</p>
               </div>
             </footer>
           </div>
