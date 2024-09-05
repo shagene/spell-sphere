@@ -6,6 +6,8 @@ import { QuizMode } from '@/components/app/QuizMode';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import RotateDevicePrompt from '@/components/app/RotateDevicePrompt';
+import PrototypeNotice from '@/components/app/PrototypeNotice';
+
 
 interface Word {
   id: string;
@@ -19,6 +21,7 @@ export default function Home() {
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [totalQuizWords, setTotalQuizWords] = useState<number | null>(null);
   const [showRotateDevicePrompt, setShowRotateDevicePrompt] = useState(false);
+  const [showPrototypeNotice, setShowPrototypeNotice] = useState(true);
 
 
   useEffect(() => {
@@ -45,6 +48,11 @@ export default function Home() {
     };
   }, []);
 
+  const acknowledgePrototype = () => {
+    setShowPrototypeNotice(false);
+    localStorage.setItem('prototypeAcknowledged', 'true');
+  };
+
   const handleWordsUpdated = useCallback((newWords: Word[]) => {
     setWords(newWords);
     localStorage.setItem('words', JSON.stringify(newWords));
@@ -68,6 +76,7 @@ export default function Home() {
 
   return (<>
     {showRotateDevicePrompt && <RotateDevicePrompt />}
+    {showPrototypeNotice && <PrototypeNotice onClose={acknowledgePrototype} />}
     <div className="flex flex-col flex-grow bg-background text-foreground">
       <div className="flex-grow p-4 sm:p-8">
         <div className="max-w-4xl mx-auto w-full">
