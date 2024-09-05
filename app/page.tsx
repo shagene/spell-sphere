@@ -5,6 +5,7 @@ import { WordList } from '@/components/app/WordList';
 import { QuizMode } from '@/components/app/QuizMode';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import RotateDevicePrompt from '@/components/app/RotateDevicePrompt';
 
 interface Word {
   id: string;
@@ -17,12 +18,31 @@ export default function Home() {
   const [isQuizMode, setIsQuizMode] = useState(false);
   const [quizScore, setQuizScore] = useState<number | null>(null);
   const [totalQuizWords, setTotalQuizWords] = useState<number | null>(null);
+  const [showRotateDevicePrompt, setShowRotateDevicePrompt] = useState(false);
+
 
   useEffect(() => {
     const storedWords = localStorage.getItem('words');
     if (storedWords) {
       setWords(JSON.parse(storedWords));
     }
+  }, []);
+
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth <= window.innerHeight) {
+        setShowRotateDevicePrompt(true);
+      } else {
+        setShowRotateDevicePrompt(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const handleWordsUpdated = useCallback((newWords: Word[]) => {
@@ -46,7 +66,8 @@ export default function Home() {
     setTotalQuizWords(null);
   }, []);
 
-  return (
+  return (<>
+    {showRotateDevicePrompt && <RotateDevicePrompt />}
     <div className="flex flex-col flex-grow bg-background text-foreground">
       <div className="flex-grow p-4 sm:p-8">
         <div className="max-w-4xl mx-auto w-full">
@@ -89,5 +110,6 @@ export default function Home() {
         </div>
       </div>
     </div>
+    </>
   );
 }

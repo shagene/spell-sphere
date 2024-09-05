@@ -85,7 +85,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
 
       const audioBlob = await response.blob();
       const audioUrl = URL.createObjectURL(audioBlob);
-      
+
       if (audioRef.current) {
         audioRef.current.src = audioUrl;
         audioRef.current.play();
@@ -230,8 +230,8 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
       </div>
       <div className="mb-4">
         <p>Word {currentWordIndex + 1} of {words.length}</p>
-        <Button 
-          onClick={() => words.length > 0 && speakWord(words[currentWordIndex].text)} 
+        <Button
+          onClick={() => words.length > 0 && speakWord(words[currentWordIndex].text)}
           className="mt-2"
           disabled={isLoading || words.length === 0}
           variant="secondary"
@@ -240,42 +240,42 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         </Button>
       </div>
       {words.length > 0 && words[currentWordIndex].helpEnabled ? (
-  <div className="mb-4">
-    <div className="flex flex-wrap gap-2 mb-2">
-      {usedLetters.map((letter, index) => (
-        <Button
-          key={letter.id}
-          variant="outline"
-          size="lg" // Changed from "sm" to "lg"
-          className="relative p-3" // Added padding
-        >
-          <span className="text-xl">{letter.char}</span>
-          <X
-            className="absolute top-0 right-0 h-4 w-4 text-destructive cursor-pointer"
-            onClick={() => handleRemoveLetter(index)}
-          />
-        </Button>
-      ))}
-    </div>
-    <div className="flex flex-wrap gap-2 mb-2">
-      {shuffledLetters.map((letter) => (
-        <Button
-          key={letter.id}
-          onClick={() => handleLetterClick(letter)}
-          variant="outline"
-          size="lg" // Changed from "sm" to "lg"
-          className="p-3" // Added padding
-        >
-          <span className="text-xl">{letter.char}</span> 
-        </Button>
-      ))}
-    </div>
-    <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="p-3">
-      <Shuffle className="mr-2 h-6 w-6" /> 
-      <span className="text-xl">Shuffle Letters</span> 
-    </Button>
-  </div>
-) : (
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {usedLetters.map((letter, index) => (
+              <Button
+                key={letter.id}
+                variant="outline"
+                size="lg" // Changed from "sm" to "lg"
+                className="relative p-3" // Added padding
+              >
+                <span className="text-xl">{letter.char}</span>
+                <X
+                  className="absolute top-0 right-0 h-4 w-4 text-destructive cursor-pointer"
+                  onClick={() => handleRemoveLetter(index)}
+                />
+              </Button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {shuffledLetters.map((letter) => (
+              <Button
+                key={letter.id}
+                onClick={() => handleLetterClick(letter)}
+                variant="outline"
+                size="lg" // Changed from "sm" to "lg"
+                className="p-3" // Added padding
+              >
+                <span className="text-xl">{letter.char}</span>
+              </Button>
+            ))}
+          </div>
+          <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="p-3">
+            <Shuffle className="mr-2 h-6 w-6" />
+            <span className="text-xl">Shuffle Letters</span>
+          </Button>
+        </div>
+      ) : (
         <div className="mb-4">
           <Input
             value={userInputs[currentWordIndex]}
@@ -324,7 +324,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   );
 
   return (
-    <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100">
+    <Card className="bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 max-w-screen-md mx-auto">
       <CardContent>
         {words.length === 0 ? (
           <p>No words available for the quiz. Please add some words first.</p>

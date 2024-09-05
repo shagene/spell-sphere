@@ -44,7 +44,7 @@ export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
   };
 
   const toggleHelp = (id: string) => {
-    const updatedWords = words.map(word => 
+    const updatedWords = words.map(word =>
       word.id === id ? { ...word, helpEnabled: !word.helpEnabled } : word
     );
     updateWords(updatedWords);
@@ -62,7 +62,7 @@ export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
 
   const saveEdit = () => {
     if (editingId && editingText.trim()) {
-      const updatedWords = words.map(word => 
+      const updatedWords = words.map(word =>
         word.id === editingId ? { ...word, text: editingText.trim() } : word
       );
       updateWords(updatedWords);
@@ -89,9 +89,9 @@ export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
           />
           <Button onClick={addWord} variant="default">Add Word</Button>
         </div>
-        <ul className="space-y-2">
+        <ul className="space-y-2 overflow-x-hidden">
           {words.map(word => (
-            <li key={word.id} className="flex justify-between items-center p-2 border rounded">
+            <li key={word.id} className="flex justify-between items-center p-2 border rounded truncate">
               {editingId === word.id ? (
                 <>
                   <Input
