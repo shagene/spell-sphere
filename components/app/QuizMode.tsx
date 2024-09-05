@@ -249,7 +249,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
           size="lg" // Changed from "sm" to "lg"
           className="relative p-3" // Added padding
         >
-          <span className="text-xl">{letter.char}</span> // Increased text size
+          <span className="text-xl">{letter.char}</span>
           <X
             className="absolute top-0 right-0 h-4 w-4 text-destructive cursor-pointer"
             onClick={() => handleRemoveLetter(index)}
