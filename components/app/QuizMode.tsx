@@ -9,6 +9,7 @@ import { Check, ChevronsUpDown, Shuffle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Voice } from 'elevenlabs-node';
 import { v4 as uuidv4 } from 'uuid';
+import useTouchDrag from '@/app/hooks/useTouchDrag';
 
 interface Word {
   id: string;
@@ -39,6 +40,8 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   const [open, setOpen] = useState(false);
   const [letters, setLetters] = useState<Letter[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const { touchState, handleTouchStart } = useTouchDrag();
+
   useEffect(() => {
     const fetchVoices = async () => {
       try {
@@ -140,6 +143,26 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     setUserInputs(newUserInputs);
   };
 
+  const handleTouchMove = useCallback((e: TouchEvent, sourceIndex: number) => {
+    if (touchState.isDragging) {
+      const touch = e.touches[0];
+      const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
+      if (targetElement instanceof HTMLElement && targetElement.dataset.index) {
+        const targetIndex = parseInt(targetElement.dataset.index, 10);
+        if (targetIndex !== sourceIndex) {
+          const newLetters = [...letters];
+          const [removed] = newLetters.splice(sourceIndex, 1);
+          newLetters.splice(targetIndex, 0, removed);
+          setLetters(newLetters);
+  
+          const newUserInputs = [...userInputs];
+          newUserInputs[currentWordIndex] = newLetters.map(letter => letter.char).join('');
+          setUserInputs(newUserInputs);
+        }
+      }
+    }
+  }, [touchState, letters, userInputs, currentWordIndex]);
+  
   const handleShuffleLetters = useCallback(() => {
     setLetters(prevLetters => {
       const shuffled = [...prevLetters].sort(() => Math.random() - 0.5);
@@ -234,21 +257,24 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         </Button>
       </div>
       {words.length > 0 && words[currentWordIndex].helpEnabled ? (
-  <div className="mb-4">
-    <div className="flex flex-wrap gap-2 mb-2">
-      {letters.map((letter, index) => (
-        <div
-          key={letter.id}
-          draggable
-          onDragStart={(e) => handleDragStart(e, index)}
-          onDragOver={handleDragOver}
-          onDrop={(e) => handleDrop(e, index)}
-          className="relative w-12 h-12 flex items-center justify-center text-lg font-bold border-2 border-gray-300 rounded cursor-move bg-white hover:bg-gray-100 transition-colors"
-        >
-          {letter.char}
-        </div>
-      ))}
-    </div>
+        <div className="mb-4">
+          <div className="flex flex-wrap gap-2 mb-2">
+            {letters.map((letter, index) => (
+              <div
+                key={letter.id}
+                draggable
+                onDragStart={(e) => handleDragStart(e, index)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDrop(e, index)}
+                onTouchStart={(e) => handleTouchStart(e.nativeEvent, e.currentTarget)}
+                onTouchMove={(e) => handleTouchMove(e.nativeEvent, index)}
+                data-index={index}
+                className="relative w-12 h-12 flex items-center justify-center text-lg font-bold border-2 border-gray-300 rounded cursor-move bg-white hover:bg-gray-100 transition-colors"
+              >
+                {letter.char}
+              </div>
+            ))}
+          </div>
     <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="mt-4">
       <Shuffle className="mr-2 h-5 w-5" />
       Shuffle Letters

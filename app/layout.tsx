@@ -31,7 +31,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
                 <p>&copy; 2023 SpellSphere. All rights reserved.</p>
                 <p>Empowering language learning through technology</p>
                 <p>Created with love for our kids, shared freely with yours.</p>
-                <p>Beta version: We're constantly improving! Feedback welcome.</p>
+                <p>Beta version: We&apos;re constantly improving! Feedback welcome.</p>
                 <p>Contact: Visit <a href="https://www.stevenhagene.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">www.stevenhagene.com</a> and use the contact form there.</p>
               </div>
             </footer>
