@@ -1,15 +1,14 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Check, ChevronsUpDown, Shuffle } from "lucide-react";
+import { Check, ChevronsUpDown, Shuffle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Voice } from 'elevenlabs-node';
 import { v4 as uuidv4 } from 'uuid';
-import useTouchDrag from '@/app/hooks/useTouchDrag';
 
 interface Word {
   id: string;
@@ -38,9 +37,9 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
   const [selectedVoice, setSelectedVoice] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [letters, setLetters] = useState<Letter[]>([]);
+  const [shuffledLetters, setShuffledLetters] = useState<Letter[]>([]);
+  const [usedLetters, setUsedLetters] = useState<Letter[]>([]);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const { touchState, handleTouchStart } = useTouchDrag();
 
   useEffect(() => {
     const fetchVoices = async () => {
@@ -63,25 +62,6 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     };
     fetchVoices();
   }, []);
-
-  useEffect(() => {
-    if (words.length > 0 && currentWordIndex < words.length && words[currentWordIndex] && words[currentWordIndex].helpEnabled) {
-      const currentWord = words[currentWordIndex].text;
-      const currentUserInput = userInputs[currentWordIndex];
-
-      if (!currentUserInput || currentUserInput.length !== currentWord.length) {
-        const wordLetters = currentWord.split('').map(char => ({ id: uuidv4(), char }));
-        const shuffledLetters = wordLetters.sort(() => Math.random() - 0.5);
-        setLetters(shuffledLetters);
-        
-        const newUserInputs = [...userInputs];
-        newUserInputs[currentWordIndex] = shuffledLetters.map(letter => letter.char).join('');
-        setUserInputs(newUserInputs);
-      }
-    } else {
-      setLetters([]);
-    }
-  }, [currentWordIndex, words, userInputs]);
 
   const speakWord = async (word: string) => {
     if (!selectedVoice) {
@@ -116,70 +96,29 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
       setIsLoading(false);
     }
   };
-  const handleInputChange = useCallback((index: number, value: string) => {
+
+  const handleInputChange = (index: number, value: string) => {
     const newUserInputs = [...userInputs];
-    newUserInputs[index] = value;
-    setUserInputs(newUserInputs);
-  }, [userInputs]);
+    const newUsedLetters = [...usedLetters];
+    const lastChar = newUserInputs[index].slice(-1);
 
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-    e.dataTransfer.setData('text/plain', index.toString());
-  };
-
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
-    e.preventDefault();
-    const sourceIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
-    const newLetters = [...letters];
-    const [removed] = newLetters.splice(sourceIndex, 1);
-    newLetters.splice(targetIndex, 0, removed);
-    setLetters(newLetters);
-
-    const newUserInputs = [...userInputs];
-    newUserInputs[currentWordIndex] = newLetters.map(letter => letter.char).join('');
-    setUserInputs(newUserInputs);
-  };
-
-  const handleTouchMove = useCallback((e: TouchEvent, sourceIndex: number) => {
-    if (touchState.isDragging) {
-      const touch = e.touches[0];
-      const targetElement = document.elementFromPoint(touch.clientX, touch.clientY);
-      if (targetElement instanceof HTMLElement && targetElement.dataset.index) {
-        const targetIndex = parseInt(targetElement.dataset.index, 10);
-        if (targetIndex !== sourceIndex) {
-          const newLetters = [...letters];
-          const [removed] = newLetters.splice(sourceIndex, 1);
-          newLetters.splice(targetIndex, 0, removed);
-          setLetters(newLetters);
-  
-          const newUserInputs = [...userInputs];
-          newUserInputs[currentWordIndex] = newLetters.map(letter => letter.char).join('');
-          setUserInputs(newUserInputs);
-        }
+    if (value.length < newUserInputs[index].length) {
+      // Letter was deleted
+      const removedLetter = newUsedLetters.pop();
+      if (removedLetter) {
+        setShuffledLetters([...shuffledLetters, removedLetter]);
       }
     }
-  }, [touchState, letters, userInputs, currentWordIndex]);
-  
-  const handleShuffleLetters = useCallback(() => {
-    setLetters(prevLetters => {
-      const shuffled = [...prevLetters].sort(() => Math.random() - 0.5);
-      const newArrangement = shuffled.map(letter => letter.char).join('');
-      
-      const newUserInputs = [...userInputs];
-      newUserInputs[currentWordIndex] = newArrangement;
-      setUserInputs(newUserInputs);
-      return shuffled;
-    });
-  }, [userInputs, currentWordIndex]);
 
-  const handleSubmit = useCallback((index: number) => {
-    if (words.length > 0 && index < words.length && words[index]) {
+    newUserInputs[index] = value;
+    setUserInputs(newUserInputs);
+    setUsedLetters(newUsedLetters);
+  };
+
+  const handleSubmit = (index: number) => {
+    if (words.length > 0 && index < words.length && words[index] && userInputs[index]) {
       const word = words[index];
-      const userAnswer = userInputs[index];
-      if (word && userAnswer.toLowerCase().trim() === word.text.toLowerCase().trim()) {
+      if (word && userInputs[index].toLowerCase().trim() === word.text.toLowerCase().trim()) {
         setScore(prevScore => prevScore + 1);
       }
       const newSubmitted = [...submitted];
@@ -189,20 +128,64 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
       if (newSubmitted.every(Boolean)) {
         setIsReviewMode(true);
       } else {
-        const nextIndex = newSubmitted.findIndex((isSubmitted, i) => i > index && !isSubmitted);
-        if (nextIndex !== -1) {
-          setCurrentWordIndex(nextIndex);
-        } else {
-          setIsReviewMode(true);
-        }
+        setCurrentWordIndex(prevIndex => {
+          let nextIndex = prevIndex + 1;
+          while (nextIndex < words.length && newSubmitted[nextIndex]) {
+            nextIndex++;
+          }
+          return nextIndex < words.length ? nextIndex : prevIndex;
+        });
       }
     }
-  }, [words, userInputs, submitted]);
+  };
 
-  const handleVoiceSelect = useCallback((voiceId: string) => {
+  const handleVoiceSelect = (voiceId: string) => {
     setSelectedVoice(voiceId);
     setOpen(false);
-  }, []);
+  };
+
+  const shuffleWord = (word: string) => {
+    return word.split('').map(char => ({ id: uuidv4(), char })).sort(() => Math.random() - 0.5);
+  };
+
+  useEffect(() => {
+    if (words.length > 0 && currentWordIndex < words.length && words[currentWordIndex] && words[currentWordIndex].helpEnabled) {
+      const wordLetters = words[currentWordIndex].text.split('').map(char => ({ id: uuidv4(), char }));
+      setShuffledLetters(wordLetters.sort(() => Math.random() - 0.5));
+      setUsedLetters([]);
+    } else {
+      setShuffledLetters([]);
+      setUsedLetters([]);
+    }
+  }, [currentWordIndex, words]);
+
+  const handleLetterClick = (letter: Letter) => {
+    const newUserInputs = [...userInputs];
+    newUserInputs[currentWordIndex] += letter.char;
+    setUserInputs(newUserInputs);
+    setShuffledLetters(shuffledLetters.filter(l => l.id !== letter.id));
+    setUsedLetters([...usedLetters, letter]);
+  };
+
+  const handleRemoveLetter = (index: number) => {
+    const newUserInputs = [...userInputs];
+    const newUsedLetters = [...usedLetters];
+    const letter = newUsedLetters[index];
+    newUserInputs[currentWordIndex] = newUserInputs[currentWordIndex].slice(0, index) + newUserInputs[currentWordIndex].slice(index + 1);
+    setUserInputs(newUserInputs);
+    setUsedLetters(newUsedLetters.filter((_, i) => i !== index));
+    setShuffledLetters([...shuffledLetters, letter]);
+  };
+
+  const handleShuffleLetters = () => {
+    setShuffledLetters(prevShuffledLetters => {
+      const allLetters = [...prevShuffledLetters, ...usedLetters];
+      return allLetters
+        .sort(() => Math.random() - 0.5)
+        .filter(letter => !usedLetters.some(usedLetter => usedLetter.id === letter.id));
+    });
+  };
+
   const renderQuizMode = () => (
     <>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
@@ -257,45 +240,55 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
         </Button>
       </div>
       {words.length > 0 && words[currentWordIndex].helpEnabled ? (
-        <div className="mb-4">
-          <div className="flex flex-wrap gap-2 mb-2">
-            {letters.map((letter, index) => (
-              <div
-                key={letter.id}
-                draggable
-                onDragStart={(e) => handleDragStart(e, index)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDrop(e, index)}
-                onTouchStart={(e) => handleTouchStart(e.nativeEvent, e.currentTarget)}
-                onTouchMove={(e) => handleTouchMove(e.nativeEvent, index)}
-                data-index={index}
-                className="relative w-12 h-12 flex items-center justify-center text-lg font-bold border-2 border-gray-300 rounded cursor-move bg-white hover:bg-gray-100 transition-colors"
-              >
-                {letter.char}
-              </div>
-            ))}
-          </div>
-    <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="mt-4">
-      <Shuffle className="mr-2 h-5 w-5" />
-      Shuffle Letters
+  <div className="mb-4">
+    <div className="flex flex-wrap gap-2 mb-2">
+      {usedLetters.map((letter, index) => (
+        <Button
+          key={letter.id}
+          variant="outline"
+          size="lg" // Changed from "sm" to "lg"
+          className="relative p-3" // Added padding
+        >
+          <span className="text-xl">{letter.char}</span> // Increased text size
+          <X
+            className="absolute top-0 right-0 h-4 w-4 text-destructive cursor-pointer"
+            onClick={() => handleRemoveLetter(index)}
+          />
+        </Button>
+      ))}
+    </div>
+    <div className="flex flex-wrap gap-2 mb-2">
+      {shuffledLetters.map((letter) => (
+        <Button
+          key={letter.id}
+          onClick={() => handleLetterClick(letter)}
+          variant="outline"
+          size="lg" // Changed from "sm" to "lg"
+          className="p-3" // Added padding
+        >
+          <span className="text-xl">{letter.char}</span> 
+        </Button>
+      ))}
+    </div>
+    <Button onClick={handleShuffleLetters} variant="secondary" size="lg" className="p-3">
+      <Shuffle className="mr-2 h-6 w-6" /> 
+      <span className="text-xl">Shuffle Letters</span> 
     </Button>
-    <p className="mt-2">Current arrangement: {userInputs[currentWordIndex]}</p>
   </div>
 ) : (
-  <div className="mb-4">
-    <Input
-      value={userInputs[currentWordIndex]}
-      onChange={(e) => handleInputChange(currentWordIndex, e.target.value)}
-      placeholder="Type the word you hear"
-      className="mr-2"
-    />
-  </div>
-)}
+        <div className="mb-4">
+          <Input
+            value={userInputs[currentWordIndex]}
+            onChange={(e) => handleInputChange(currentWordIndex, e.target.value)}
+            placeholder="Type the word you hear"
+            className="mr-2"
+          />
+        </div>
+      )}
       <Button
         onClick={() => handleSubmit(currentWordIndex)}
         disabled={submitted[currentWordIndex] || words.length === 0}
         variant="default"
-        size="lg"
       >
         Submit Answer
       </Button>
@@ -303,9 +296,10 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     </>
   );
 
-  const handleFinishQuiz = useCallback(() => {
+  const handleFinishQuiz = () => {
     onQuizComplete(score, words.length);
-  }, [score, words.length, onQuizComplete]);
+  };
+
   const renderReviewMode = () => (
     <>
       <h2 className="text-2xl font-bold mb-4">Quiz Review</h2>
