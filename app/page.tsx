@@ -134,7 +134,7 @@ export default function Home() {
                   />
                 ) : (
                   <>
-                    <WordList onWordsUpdated={handleWordsUpdated} />
+                    <WordList words={words} onWordsUpdated={handleWordsUpdated} />
                     <Button 
                       onClick={startQuiz} 
                       className="mt-4 w-full"
@@ -169,7 +169,6 @@ export default function Home() {
                 <CardContent>
                   <p>Your score: {quizScore}/{totalQuizWords}</p>
                   <p className="text-muted-foreground">
-                    {/* ... (existing feedback logic) */}
                   </p>
                 </CardContent>
               </Card>

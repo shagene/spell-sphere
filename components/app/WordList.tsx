@@ -13,26 +13,27 @@ interface Word {
 }
 
 interface WordListProps {
+  words: Word[];
   onWordsUpdated: (words: Word[]) => void;
 }
 
-export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
-  const [words, setWords] = useState<Word[]>([]);
+export const WordList: React.FC<WordListProps> = ({ words: initialWords, onWordsUpdated }) => {
+  const [words, setWords] = useState<Word[]>(initialWords);
   const [newWord, setNewWord] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingText, setEditingText] = useState('');
 
   useEffect(() => {
-    const storedWords = localStorage.getItem('words');
-    if (storedWords) {
-      setWords(JSON.parse(storedWords));
-    }
-  }, []);
+    setWords(initialWords);
+  }, [initialWords]);
+
+  useEffect(() => {
+    console.log("WordList component words state:", words);
+  }, [words]);
 
   const updateWords = useCallback((updatedWords: Word[]) => {
     setWords(updatedWords);
     onWordsUpdated(updatedWords);
-    localStorage.setItem('words', JSON.stringify(updatedWords));
   }, [onWordsUpdated]);
 
   const addWord = () => {
@@ -73,7 +74,6 @@ export const WordList: React.FC<WordListProps> = ({ onWordsUpdated }) => {
 
   const clearAllWords = () => {
     updateWords([]);
-    localStorage.removeItem('words');
   };
 
   return (
