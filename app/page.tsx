@@ -32,8 +32,13 @@ export default function Home() {
       const sharedWords = urlParams.get('words');
       if (sharedWords) {
         try {
-          // Decode the URL parameter twice to handle double encoding
-          const decodedWords = decodeURIComponent(decodeURIComponent(sharedWords));
+          let decodedWords = decodeURIComponent(sharedWords);
+          
+          // Check if the decoded string starts with '%', indicating double encoding
+          if (decodedWords.startsWith('%')) {
+            decodedWords = decodeURIComponent(decodedWords);
+          }
+          
           const parsedWords = JSON.parse(decodedWords);
           setWords(parsedWords);
         } catch (error) {
@@ -96,8 +101,7 @@ export default function Home() {
 
   const generateShareUrl = useCallback(() => {
     const encodedWords = encodeURIComponent(JSON.stringify(words));
-    // Encode the URL parameter twice to handle Vercel's encoding
-    return `${window.location.href}?words=${encodeURIComponent(encodedWords)}`;
+    return `${window.location.href}?words=${encodedWords}`;
   }, [words]);
 
   return (
