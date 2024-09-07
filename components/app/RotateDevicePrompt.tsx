@@ -1,7 +1,11 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const RotateDevicePrompt: React.FC = () => {
+interface RotateDevicePromptProps {
+  onClose: () => void;
+}
+
+const RotateDevicePrompt: React.FC<RotateDevicePromptProps> = ({ onClose }) => {
   const phoneVariants = {
     initial: { rotate: 0 },
     animate: { rotate: 90 },
@@ -30,6 +34,12 @@ const RotateDevicePrompt: React.FC = () => {
         />
         <p className="text-white text-xl font-bold">Rotate device</p>
         <p className="text-white mt-2">for better experience</p>
+        <button
+          onClick={onClose}
+          className="mt-4 px-4 py-2 bg-white text-black rounded-md hover:bg-gray-200 transition-colors"
+        >
+          Continue in Portrait Mode
+        </button>
       </div>
     </motion.div>
   );
