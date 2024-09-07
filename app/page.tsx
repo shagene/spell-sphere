@@ -176,7 +176,6 @@ export default function Home() {
                 <CardContent>
                   <p>Your score: {quizScore}/{totalQuizWords}</p>
                   <p className="text-muted-foreground">
-                    {/* ... (existing feedback logic) */}
                   </p>
                 </CardContent>
               </Card>

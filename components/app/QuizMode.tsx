@@ -186,10 +186,18 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
     });
   };
 
+  const handleBackToWordList = () => {
+    onBackToDashboard();
+  };
+
   const renderQuizMode = () => (
     <>
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mt-6 mb-6">
         <h2 className="text-2xl font-bold mb-2 sm:mb-0">Spelling Quiz</h2>
+        <div className="flex space-x-2">
+          <Button onClick={handleBackToWordList} variant="ghost">
+            Back to Word List
+          </Button>
         {voices.length > 0 && (
           <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
@@ -227,6 +235,7 @@ export function QuizMode({ words, onQuizComplete, onBackToDashboard }: QuizModeP
             </PopoverContent>
           </Popover>
         )}
+      </div>
       </div>
       <div className="mb-4">
         <p>Word {currentWordIndex + 1} of {words.length}</p>

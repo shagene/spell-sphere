@@ -18,7 +18,7 @@
     "elevenlabs": "^0.15.0",
     "elevenlabs-node": "^2.0.3",
     "framer-motion": "^11.5.3",
-    "lucide-react": "^0.438.0",
+    "lucide-react": "^0.439.0",
     "next": "14.2.7",
     "next-themes": "^0.3.0",
     "react": "^18",
