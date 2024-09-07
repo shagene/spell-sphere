@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useCallback, useEffect } from 'react';
+import { v4 as uuidv4 } from 'uuid';
 import { WordList } from '@/components/app/WordList';
 import { QuizMode } from '@/components/app/QuizMode';
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,25 @@ interface Word {
   helpEnabled: boolean;
 }
 
+function compressWords(words: Word[]): string {
+  const wordsString = words.map(w => `${w.text}${w.helpEnabled ? '1' : '0'}`).join(',');
+  return btoa(wordsString);
+}
+
+function decompressWords(compressed: string): Word[] {
+  try {
+    const wordsString = atob(compressed);
+    return wordsString.split(',').map(w => ({
+      id: uuidv4(),
+      text: w.slice(0, -1),
+      helpEnabled: w.slice(-1) === '1'
+    }));
+  } catch (error) {
+    console.error("Error decompressing words:", error);
+    return [];
+  }
+}
+
 export default function Home() {
   const [words, setWords] = useState<Word[]>([]);
   const [isQuizMode, setIsQuizMode] = useState(false);
@@ -24,33 +44,20 @@ export default function Home() {
   const [showPrototypeNotice, setShowPrototypeNotice] = useState(true);
 
   useEffect(() => {
-    const storedWords = localStorage.getItem('words');
-    if (storedWords) {
-      setWords(JSON.parse(storedWords));
-      console.log("Loaded words from localStorage:", JSON.parse(storedWords));
+    const urlParams = new URLSearchParams(window.location.search);
+    const compressedWords = urlParams.get('w');
+    if (compressedWords) {
+      const decompressedWords = decompressWords(compressedWords);
+      setWords(decompressedWords);
+      console.log("Loaded shared words:", decompressedWords);
+      localStorage.setItem('words', JSON.stringify(decompressedWords));
     } else {
-      const urlParams = new URLSearchParams(window.location.search);
-      const sharedWords = urlParams.get('words');
-      if (sharedWords) {
-        try {
-          let decodedWords = decodeURIComponent(sharedWords);
-          
-          // Check if the decoded string starts with '%', indicating double encoding
-          if (decodedWords.startsWith('%')) {
-            decodedWords = decodeURIComponent(decodedWords);
-          }
-          
-          const parsedWords = JSON.parse(decodedWords);
-          setWords(parsedWords);
-          console.log("Loaded shared words:", parsedWords);
-          
-          // Save the shared words to localStorage
-          localStorage.setItem('words', JSON.stringify(parsedWords));
-        } catch (error) {
-          console.error("Error parsing shared words:", error);
-        }
+      const storedWords = localStorage.getItem('words');
+      if (storedWords) {
+        setWords(JSON.parse(storedWords));
+        console.log("Loaded words from localStorage:", JSON.parse(storedWords));
       } else {
-        console.log("No shared words found in URL");
+        console.log("No shared words found in URL or localStorage");
       }
     }
 
@@ -111,8 +118,8 @@ export default function Home() {
   }, []);
 
   const generateShareUrl = useCallback(() => {
-    const encodedWords = encodeURIComponent(JSON.stringify(words));
-    return `${window.location.href}?words=${encodedWords}`;
+    const compressedWords = compressWords(words);
+    return `${window.location.origin}?w=${compressedWords}`;
   }, [words]);
 
   return (
@@ -169,6 +176,7 @@ export default function Home() {
                 <CardContent>
                   <p>Your score: {quizScore}/{totalQuizWords}</p>
                   <p className="text-muted-foreground">
+                    {/* ... (existing feedback logic) */}
                   </p>
                 </CardContent>
               </Card>
