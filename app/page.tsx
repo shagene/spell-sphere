@@ -27,6 +27,7 @@ export default function Home() {
     const storedWords = localStorage.getItem('words');
     if (storedWords) {
       setWords(JSON.parse(storedWords));
+      console.log("Loaded words from localStorage:", JSON.parse(storedWords));
     } else {
       const urlParams = new URLSearchParams(window.location.search);
       const sharedWords = urlParams.get('words');
@@ -41,15 +42,25 @@ export default function Home() {
           
           const parsedWords = JSON.parse(decodedWords);
           setWords(parsedWords);
+          console.log("Loaded shared words:", parsedWords);
+          
+          // Save the shared words to localStorage
+          localStorage.setItem('words', JSON.stringify(parsedWords));
         } catch (error) {
           console.error("Error parsing shared words:", error);
         }
+      } else {
+        console.log("No shared words found in URL");
       }
     }
 
     const prototypeAcknowledged = localStorage.getItem('prototypeAcknowledged') === 'true';
     setShowPrototypeNotice(!prototypeAcknowledged);
   }, []);
+
+  useEffect(() => {
+    console.log("Current words state:", words);
+  }, [words]);
 
   useEffect(() => {
     const handleResize = () => {
